@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenSankey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #08080f;
+      color: #d4d4e0;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Subtle background grid ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      padding: 32px 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #818cf8 0%, #06b6d4 50%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p { margin-top: 2px; color: #4a4a6a; font-size: 13px; font-weight: 400; }
+
+    .container { position: relative; z-index: 1; max-width: 1280px; margin: 24px auto; padding: 0 28px; }
+
+    .card {
+      background: rgba(16, 16, 28, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #5a5a7a;
+      margin-bottom: 18px;
+    }
+
+    #chart {
+      width: 100%;
+      min-height: 540px;
+      border-radius: 12px;
+      background: radial-gradient(ellipse at 50% 50%, rgba(99, 102, 241, 0.02) 0%, transparent 70%);
+    }
+
+    /* ── Controls ── */
+    .controls { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; }
+    .control-group { display: flex; flex-direction: column; gap: 6px; }
+    .control-group label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #5a5a7a;
+    }
+    .control-group select {
+      appearance: none;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      color: #c4c4da;
+      padding: 8px 32px 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%235a5a7a' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+    .control-group select:hover { border-color: rgba(99, 102, 241, 0.4); }
+    .control-group select:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15); }
+    .control-group select option { background: #12121e; }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 3px;
+      border: none;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.08);
+      outline: none;
+      width: 110px;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #6366f1;
+      cursor: pointer;
+      border: 3px solid #08080f;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+      transition: box-shadow 0.2s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 16px rgba(99, 102, 241, 0.6);
+    }
+
+    /* ── Metrics Grid ── */
+    .metrics { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+    .metric {
+      padding: 16px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.04);
+      transition: all 0.25s cubic-bezier(.4,0,.2,1);
+      position: relative;
+      overflow: hidden;
+    }
+    .metric::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent, #6366f1), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .metric:hover { border-color: rgba(99, 102, 241, 0.2); transform: translateY(-1px); }
+    .metric:hover::before { opacity: 1; }
+    .metric .label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #5a5a7a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .metric .value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 6px;
+      letter-spacing: -1px;
+      font-variant-numeric: tabular-nums;
+    }
+    .metric .value.good { color: #34d399; }
+    .metric .value.warn { color: #fbbf24; }
+    .metric .value.bad { color: #f87171; }
+    .metric .sub { font-size: 11px; color: #4a4a6a; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>OpenSankey</h1>
+    <p>Zero-dependency Sankey visualization for BI tools</p>
+  </header>
+  <div class="container">
+    <div class="card">
+      <h2>Controls</h2>
+      <div class="controls">
+        <div class="control-group">
+          <label>Dataset</label>
+          <select id="dataset">
+            <option value="ecommerce">E-Commerce Journey</option>
+            <option value="marketing">Marketing Funnel</option>
+            <option value="support">Support Tickets</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Highlight</label>
+          <select id="highlight">
+            <option value="both">Both directions</option>
+            <option value="forward">Forward only</option>
+            <option value="backward">Backward only</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Node Width</label>
+          <input type="range" id="nodeWidth" min="10" max="40" value="22">
+        </div>
+        <div class="control-group">
+          <label>Node Spacing</label>
+          <input type="range" id="nodePadding" min="4" max="40" value="14">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>User Journey Flow</h2>
+      <div id="chart"></div>
+    </div>
+    <div class="card">
+      <h2>Conversion Metrics</h2>
+      <div id="metrics" class="metrics"></div>
+    </div>
+  </div>
+
+  <script src="../packages/core/dist/index.global.js"></script>
+  <script>
+    const datasets = {
+      ecommerce: [
+        { from: 'Google Ads', to: 'Landing Page', count: 5000 },
+        { from: 'Organic Search', to: 'Landing Page', count: 3000 },
+        { from: 'Social Media', to: 'Landing Page', count: 2000 },
+        { from: 'Direct', to: 'Landing Page', count: 1500 },
+        { from: 'Landing Page', to: 'Product Page', count: 7200 },
+        { from: 'Landing Page', to: 'Bounce', count: 4300 },
+        { from: 'Product Page', to: 'Add to Cart', count: 3100 },
+        { from: 'Product Page', to: 'Browse More', count: 2400 },
+        { from: 'Product Page', to: 'Exit', count: 1700 },
+        { from: 'Browse More', to: 'Add to Cart', count: 1400 },
+        { from: 'Browse More', to: 'Exit', count: 1000 },
+        { from: 'Add to Cart', to: 'Checkout', count: 3000 },
+        { from: 'Add to Cart', to: 'Abandon Cart', count: 1500 },
+        { from: 'Checkout', to: 'Purchase', count: 2200 },
+        { from: 'Checkout', to: 'Abandon Checkout', count: 800 },
+      ],
+      marketing: [
+        { from: 'Email Blast', to: 'Opens', count: 12000 },
+        { from: 'Opens', to: 'Clicks', count: 3600 },
+        { from: 'Opens', to: 'No Action', count: 8400 },
+        { from: 'Clicks', to: 'Landing', count: 3200 },
+        { from: 'Clicks', to: 'Bounce', count: 400 },
+        { from: 'Landing', to: 'Sign Up', count: 1440 },
+        { from: 'Landing', to: 'Browse Only', count: 1760 },
+        { from: 'Sign Up', to: 'Activated', count: 864 },
+        { from: 'Sign Up', to: 'Dormant', count: 576 },
+        { from: 'Activated', to: 'Subscribed', count: 518 },
+        { from: 'Activated', to: 'Free Tier', count: 346 },
+      ],
+      support: [
+        { from: 'Ticket Created', to: 'Auto-Routed', count: 4000 },
+        { from: 'Ticket Created', to: 'Manual Triage', count: 1200 },
+        { from: 'Auto-Routed', to: 'L1 Support', count: 2800 },
+        { from: 'Auto-Routed', to: 'L2 Support', count: 1200 },
+        { from: 'Manual Triage', to: 'L1 Support', count: 720 },
+        { from: 'Manual Triage', to: 'L2 Support', count: 480 },
+        { from: 'L1 Support', to: 'Resolved', count: 2640 },
+        { from: 'L1 Support', to: 'Escalated', count: 880 },
+        { from: 'L2 Support', to: 'Resolved', count: 1008 },
+        { from: 'L2 Support', to: 'Escalated', count: 672 },
+        { from: 'Escalated', to: 'Engineering', count: 1164 },
+        { from: 'Escalated', to: 'Resolved', count: 388 },
+        { from: 'Engineering', to: 'Fixed', count: 931 },
+        { from: 'Engineering', to: "Won't Fix", count: 233 },
+      ],
+    };
+
+    let chart = null;
+
+    function render() {
+      const datasetName = document.getElementById('dataset').value;
+      const highlightMode = document.getElementById('highlight').value;
+      const nodeWidth = parseInt(document.getElementById('nodeWidth').value);
+      const nodePadding = parseInt(document.getElementById('nodePadding').value);
+
+      const container = document.getElementById('chart');
+      if (chart) { chart.destroy(); chart = null; }
+
+      const width = container.clientWidth || 1000;
+
+      chart = new OpenSankey.SankeyChart(container, {
+        width,
+        height: 540,
+        nodeWidth,
+        nodePadding,
+        highlightMode,
+        padding: { top: 28, right: 160, bottom: 28, left: 28 },
+      });
+
+      chart.setData(
+        { rows: datasets[datasetName] },
+        { sourceField: 'from', targetField: 'to', valueField: 'count' },
+      );
+
+      // Render metrics
+      const metrics = chart.getJourneyMetrics();
+      const metricsEl = document.getElementById('metrics');
+      metricsEl.innerHTML = metrics
+        .filter(m => !m.isSource)
+        .map(m => {
+          const pct = m.conversionRate * 100;
+          const cls = pct >= 70 ? 'good' : pct >= 40 ? 'warn' : 'bad';
+          return `
+            <div class="metric">
+              <div class="label">${m.label}</div>
+              <div class="value ${m.isSink ? '' : cls}">${m.isSink ? '\u2014' : pct.toFixed(1) + '%'}</div>
+              <div class="sub">
+                ${m.isSink
+                  ? m.inflow.toLocaleString() + ' arrived'
+                  : 'Drop: ' + m.dropOff.toLocaleString() + ' (' + (m.dropOffRate * 100).toFixed(1) + '%)'}
+              </div>
+            </div>
+          `;
+        }).join('');
+    }
+
+    document.getElementById('dataset').addEventListener('change', render);
+    document.getElementById('highlight').addEventListener('change', render);
+    document.getElementById('nodeWidth').addEventListener('input', render);
+    document.getElementById('nodePadding').addEventListener('input', render);
+
+    render();
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { if (chart) render(); }, 150);
+    });
+  </script>
+</body>
+</html>
