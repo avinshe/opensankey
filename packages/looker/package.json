@@ -1,0 +1,17 @@
+{
+  "name": "@opensankey/looker",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/sankey-looker.js",
+  "files": ["dist", "manifest.lkml"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "dependencies": {
+    "@opensankey/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0"
+  }
+}
