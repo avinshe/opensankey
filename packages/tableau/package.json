@@ -1,0 +1,16 @@
+{
+  "name": "@opensankey/tableau",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.global.js",
+  "files": ["dist", "opensankey.trex"],
+  "scripts": {
+    "build": "tsup"
+  },
+  "dependencies": {
+    "@opensankey/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0"
+  }
+}

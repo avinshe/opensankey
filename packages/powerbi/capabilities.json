@@ -1,0 +1,69 @@
+{
+  "dataRoles": [
+    {
+      "displayName": "Source",
+      "name": "source",
+      "kind": "Grouping",
+      "description": "Source node dimension"
+    },
+    {
+      "displayName": "Target",
+      "name": "target",
+      "kind": "Grouping",
+      "description": "Target node dimension"
+    },
+    {
+      "displayName": "Value",
+      "name": "value",
+      "kind": "Measure",
+      "description": "Flow value / weight"
+    }
+  ],
+  "dataViewMappings": [
+    {
+      "categorical": {
+        "categories": {
+          "select": [
+            { "for": { "in": "source" } },
+            { "for": { "in": "target" } }
+          ]
+        },
+        "values": {
+          "select": [
+            { "bind": { "to": "value" } }
+          ]
+        }
+      }
+    }
+  ],
+  "objects": {
+    "sankeySettings": {
+      "displayName": "Sankey Settings",
+      "properties": {
+        "nodeWidth": {
+          "displayName": "Node Width",
+          "type": { "numeric": true }
+        },
+        "nodePadding": {
+          "displayName": "Node Spacing",
+          "type": { "numeric": true }
+        },
+        "linkOpacity": {
+          "displayName": "Link Opacity",
+          "type": { "numeric": true }
+        },
+        "highlightMode": {
+          "displayName": "Highlight Mode",
+          "type": {
+            "enumeration": [
+              { "value": "both", "displayName": "Both directions" },
+              { "value": "forward", "displayName": "Forward only" },
+              { "value": "backward", "displayName": "Backward only" },
+              { "value": "none", "displayName": "None" }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
