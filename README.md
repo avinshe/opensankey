@@ -143,12 +143,20 @@ const chart = new SankeyChart(container, {
 |---------|-------------|--------|
 | `@opensankey/core` | Layout engine, SVG renderer, interactions | ~44KB IIFE |
 | `@opensankey/looker` | Looker custom visualization adapter | ~25KB IIFE (minified) |
+| `@opensankey/powerbi` | Power BI custom visual adapter | ~25KB IIFE (minified) |
+| `@opensankey/tableau` | Tableau dashboard extension | ~26KB IIFE (minified) |
+| `@opensankey/sigma` | Sigma Computing plugin | ~45KB IIFE (minified) |
 
-## Looker Integration
+## BI Tool Integration
 
-See [`packages/looker/`](packages/looker/) for the Looker custom visualization adapter. Upload the built IIFE bundle and `manifest.lkml` to your Looker instance.
+All adapters follow the same pattern: convert the platform's data format into `TabularData` rows and pass them to `@opensankey/core`. Each requires 2 dimensions (source, target) and 1 measure (value).
 
-Requires 2 dimensions (source, target) and 1 measure (value). Configurable options: Node Width, Node Padding, Link Opacity, Highlight Mode.
+| Platform | Adapter | Setup |
+|----------|---------|-------|
+| **Looker** | [`packages/looker/`](packages/looker/) | Upload IIFE bundle + `manifest.lkml` |
+| **Power BI** | [`packages/powerbi/`](packages/powerbi/) | Package as `.pbiviz` custom visual |
+| **Tableau** | [`packages/tableau/`](packages/tableau/) | Host as dashboard extension + `.trex` manifest |
+| **Sigma** | [`packages/sigma/`](packages/sigma/) | Host as plugin, configure via editor panel |
 
 ## Development
 
@@ -180,9 +188,10 @@ opensankey/
 │   │   │   ├── transforms/    # Tabular data transform, journey analysis
 │   │   │   └── chart.ts       # Main SankeyChart API
 │   │   └── tests/             # 25 tests (vitest + jsdom)
-│   └── looker/                # @opensankey/looker
-│       ├── src/index.ts       # Looker custom viz adapter
-│       └── manifest.lkml      # Looker manifest
+│   ├── looker/                # @opensankey/looker
+│   ├── powerbi/               # @opensankey/powerbi
+│   ├── tableau/               # @opensankey/tableau
+│   └── sigma/                 # @opensankey/sigma
 ├── examples/
 │   └── demo.html              # Interactive demo with 3 datasets
 └── package.json

@@ -1,0 +1,17 @@
+{
+  "name": "@opensankey/powerbi",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.global.js",
+  "files": ["dist", "pbiviz.json", "capabilities.json"],
+  "scripts": {
+    "build": "tsup"
+  },
+  "dependencies": {
+    "@opensankey/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "powerbi-visuals-api": "^5.9.0"
+  }
+}
